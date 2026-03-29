@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập MindX Quantum LMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="./image-removebg-preview.png" />
+    <style>
+      body {
+        font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+      }
+
+      .loader {
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #2563eb;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.28),_transparent_28%),linear-gradient(135deg,#0f172a,#111827,#1e293b)] flex items-center justify-center p-4 text-slate-800">
+    <div class="w-full max-w-md rounded-[28px] border border-white/10 bg-white/95 p-8 shadow-2xl backdrop-blur">
+      <div class="mb-8 text-center">
+        <div class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 text-3xl text-white shadow-lg">M</div>
+        <p class="text-xs font-bold uppercase tracking-[0.3em] text-sky-600">Hệ thống học tập</p>
+        <h1 class="mt-2 text-3xl font-black text-slate-900">MindX Quantum LMS</h1>
+        <p class="mt-2 text-sm text-slate-500">Đăng nhập để quản lý lớp học, trò chuyện và theo dõi thành tích.</p>
+      </div>
+
+      <button id="google-login-btn" class="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-700 transition hover:border-sky-500 hover:bg-sky-50">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="h-5 w-5" />
+        <span>Tiếp tục với Google</span>
+      </button>
+
+      <div class="relative my-5 flex items-center">
+        <div class="h-px flex-1 bg-slate-200"></div>
+        <span class="mx-4 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Hoặc</span>
+        <div class="h-px flex-1 bg-slate-200"></div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Email</label>
+          <input id="email-input" type="email" class="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-500 focus:bg-white" placeholder="hoc.sinh@example.com" />
+        </div>
+        <div>
+          <label class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Mật khẩu</label>
+          <input id="pass-input" type="password" class="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-500 focus:bg-white" placeholder="••••••••" />
+        </div>
+        <button id="email-login-btn" class="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-700 px-4 py-3 font-bold text-white transition hover:bg-blue-800">
+          <span id="btn-text">Đăng nhập</span>
+          <div id="btn-loader" class="loader hidden"></div>
+        </button>
+      </div>
+
+      <p id="login-status" class="mt-5 text-center text-sm text-slate-500">
+        Học sinh và giáo viên là tài khoản tự do. Lớp học chỉ xuất hiện sau khi được gắn vào lớp.
+      </p>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCEtJisxbrfVTn4YIVJQmTY_ckLPEYUH3Q",
+        authDomain: "spck-a3823.firebaseapp.com",
+        projectId: "spck-a3823",
+        storageBucket: "spck-a3823.firebasestorage.app",
+        messagingSenderId: "29616998416",
+        appId: "1:29616998416:web:92d22ed281ffc089892295"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const ADMIN_EMAILS = ["admin@learning-system.com"];
+
+      const btnText = document.getElementById("btn-text");
+      const btnLoader = document.getElementById("btn-loader");
+      const status = document.getElementById("login-status");
+
+      function setLoading(isLoading) {
+        btnText.classList.toggle("hidden", isLoading);
+        btnLoader.classList.toggle("hidden", !isLoading);
+      }
+
+      async function ensureUserProfile(user, fallbackRole = "teacher") {
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+
+        if (snap.exists()) {
+          const profile = snap.data();
+          if (profile.active === false) throw new Error("Tài khoản đã bị vô hiệu hóa.");
+          return profile;
+        }
+
+        const role = ADMIN_EMAILS.includes(user.email) ? "admin" : fallbackRole;
+        const profile = {
+          uid: user.uid,
+          name: user.displayName || user.email?.split("@")[0] || "Người dùng",
+          email: user.email || "",
+          role,
+          active: true,
+          xp: 0,
+          createdAt: serverTimestamp()
+        };
+
+        await setDoc(ref, profile);
+        return profile;
+      }
+
+      async function redirectByRole(user) {
+        await ensureUserProfile(user);
+        window.location.href = "index.html";
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+        try {
+          status.textContent = "Đang kiểm tra quyền truy cập...";
+          await redirectByRole(user);
+        } catch (error) {
+          console.error(error);
+          await signOut(auth);
+          status.textContent = "Không thể đăng nhập vào hệ thống.";
+          alert(error.message || "Không thể đăng nhập.");
+        }
+      });
+
+      document.getElementById("google-login-btn").onclick = async () => {
+        try {
+          status.textContent = "Đang đăng nhập với Google...";
+          await signInWithPopup(auth, provider);
+        } catch (error) {
+          console.error(error);
+          status.textContent = "Đăng nhập Google thất bại.";
+          alert("Đăng nhập Google thất bại: " + error.message);
+        }
+      };
+
+      document.getElementById("email-login-btn").onclick = async () => {
+        const email = document.getElementById("email-input").value.trim();
+        const pass = document.getElementById("pass-input").value;
+        if (!email || !pass) return alert("Vui lòng nhập đầy đủ email và mật khẩu.");
+
+        setLoading(true);
+        status.textContent = "Đang đăng nhập...";
+
+        try {
+          const credential = await signInWithEmailAndPassword(auth, email, pass);
+          await redirectByRole(credential.user);
+        } catch (error) {
+          console.error(error);
+          status.textContent = "Sai tài khoản hoặc mật khẩu.";
+          alert("Sai tài khoản hoặc mật khẩu.");
+        } finally {
+          setLoading(false);
+        }
+      };
+    </script>
+  </body>
+</html>
