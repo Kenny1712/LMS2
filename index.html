@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindX Quantum LMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="./image-removebg-preview.png">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <p class="brand-kicker">Hệ thống học tập</p>
+        <h1>MindX Quantum LMS</h1>
+      </div>
+
+      <div class="role-panel">
+        <span id="userRoleBadge" class="role-badge">Đang tải...</span>
+        <p id="welcomeText">Đang tải thông tin người dùng...</p>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-btn active" data-page="overview" onclick="navigate('overview')">Tổng quan</button>
+        <button class="nav-btn" data-page="accounts" onclick="navigate('accounts')">Tài khoản</button>
+        <button class="nav-btn" data-page="classes" onclick="navigate('classes')">Lớp học</button>
+        <button class="nav-btn" data-page="attendance" onclick="navigate('attendance')">Điểm danh</button>
+        <button class="nav-btn" data-page="assignments" onclick="navigate('assignments')">Bài tập</button>
+        <button class="nav-btn" data-page="chat" onclick="navigate('chat')">Trò chuyện</button>
+      </nav>
+
+      <div class="sidebar-tools">
+        <button class="tool-btn" onclick="toggleDarkMode()">Chế độ tối</button>
+        <button class="tool-btn" onclick="toggleMusic()" id="musicBtn">Nhạc nền: <span id="musicStatus">Tắt</span></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <p class="eyebrow">Bảng điều khiển thông minh</p>
+          <h2 id="pageHeading">Tổng quan</h2>
+        </div>
+        <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+      </div>
+
+      <section id="overview" class="page active">
+        <div class="hero-panel">
+          <div>
+            <p class="section-label" id="heroLabel">Không gian điều hành học tập</p>
+            <h3 id="heroTitle">Quản lý tài khoản, lớp học, bài tập và tương tác trong một nơi.</h3>
+            <p id="heroDescription">Tài khoản giáo viên và học sinh là tài khoản tự do. Chỉ khi giáo viên tạo lớp và thêm thành viên, lớp học mới xuất hiện trong hồ sơ làm việc của họ.</p>
+          </div>
+          <div class="hero-glow"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span id="statStudents">0</span>
+            <p>Học sinh</p>
+          </div>
+          <div class="stat-card">
+            <span id="statTeachers">0</span>
+            <p>Giáo viên</p>
+          </div>
+          <div class="stat-card">
+            <span id="statClasses">0</span>
+            <p>Lớp học</p>
+          </div>
+          <div class="stat-card">
+            <span id="statAssignments">0</span>
+            <p>Bài tập</p>
+          </div>
+        </div>
+
+        <div class="command-grid">
+          <div class="feature-panel">
+            <div class="feature-panel-head">
+              <div>
+                <p class="section-label">Quantum cockpit</p>
+                <h3 id="overviewInsightTitle">Trung tâm điều phối thông minh</h3>
+              </div>
+              <span class="status-pill live">Live</span>
+            </div>
+            <p id="overviewInsightText" class="muted-text">Hệ thống đang tổng hợp dữ liệu lớp học, bài tập và tương tác để gợi ý hành động ưu tiên.</p>
+            <div class="quick-action-grid">
+              <button class="quick-action-card" data-page="classes" type="button" onclick="navigate('classes')">
+                <strong>Lớp học</strong>
+                <span>Tạo, xem và mở workspace lớp</span>
+              </button>
+              <button class="quick-action-card" data-page="assignments" type="button" onclick="navigate('assignments')">
+                <strong>Bài tập</strong>
+                <span>Giao bài hoặc nộp bài ngay</span>
+              </button>
+              <button class="quick-action-card" data-page="attendance" type="button" onclick="navigate('attendance')">
+                <strong>Điểm danh</strong>
+                <span>Theo dõi nhịp học và XP</span>
+              </button>
+              <button class="quick-action-card" data-page="chat" type="button" onclick="navigate('chat')">
+                <strong>Trò chuyện</strong>
+                <span>Mở chat cá nhân và chat lớp</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="panel spotlight-panel">
+            <div class="section-head">
+              <div>
+                <h3>Nhịp độ hôm nay</h3>
+                <p class="muted-text">Tóm tắt nhanh các tín hiệu quan trọng nhất.</p>
+              </div>
+            </div>
+            <div id="todayPulse" class="metric-stack"></div>
+          </div>
+
+          <div class="panel spotlight-panel">
+            <div class="section-head">
+              <div>
+                <h3>Lớp nổi bật</h3>
+                <p class="muted-text">Lớp hoặc không gian có mức hoạt động đáng chú ý nhất.</p>
+              </div>
+            </div>
+            <div id="overviewClassSpotlight" class="list-wrap"></div>
+          </div>
+        </div>
+
+        <div class="premium-grid">
+          <div class="panel premium-panel">
+            <div class="section-head">
+              <div>
+                <h3>Gợi ý thông minh</h3>
+                <p class="muted-text">Các bước nên ưu tiên tiếp theo theo đúng vai trò của bạn.</p>
+              </div>
+            </div>
+            <div id="smartRecommendations" class="recommendation-grid"></div>
+          </div>
+
+          <div class="panel premium-panel">
+            <div class="section-head">
+              <div>
+                <h3>Dòng hoạt động</h3>
+                <p class="muted-text">Bài tập, điểm danh và bài nộp mới nhất trên hệ thống bạn nhìn thấy.</p>
+              </div>
+            </div>
+            <div id="recentActivity" class="timeline-feed"></div>
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <h3>Leaderboard toàn hệ thống</h3>
+                <p class="muted-text">Nộp bài: +25 XP, có mặt đúng giờ: +10 XP, đi trễ: -10 XP.</p>
+              </div>
+            </div>
+            <div id="globalLeaderboard" class="list-wrap"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Ghi chú quyền hạn</h3>
+            <p id="roleSummary" class="role-summary">Đang tải quyền hạn...</p>
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div class="panel">
+            <h3>Bảo mật tài khoản</h3>
+            <div class="form-group">
+              <label for="newPassword">Mật khẩu mới</label>
+              <input id="newPassword" type="password" placeholder="Nhập mật khẩu mới">
+            </div>
+            <div class="action-row">
+              <button class="primary-btn" onclick="changeOwnPassword()">Đổi mật khẩu</button>
+              <button class="secondary-btn" onclick="linkGoogleAccount()">Liên kết Google</button>
+            </div>
+            <p id="securityStatus" class="muted-text">Bạn có thể đổi mật khẩu và liên kết tài khoản Google để đăng nhập nhanh hơn.</p>
+          </div>
+
+          <div class="panel">
+            <h3>Nhìn nhanh hồ sơ học tập</h3>
+            <div id="profileClassInfo" class="list-wrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="accounts" class="page">
+        <div class="two-column">
+          <div class="panel" id="accountFormPanel">
+            <h3 id="accountFormTitle">Tạo tài khoản</h3>
+            <div class="form-group">
+              <label for="accountName">Họ và tên</label>
+              <input id="accountName" type="text" placeholder="Nhập họ tên">
+            </div>
+            <div class="form-group">
+              <label for="accountEmail">Email</label>
+              <input id="accountEmail" type="email" placeholder="email@example.com">
+            </div>
+            <div class="form-group">
+              <label for="accountRole">Vai trò</label>
+              <select id="accountRole"></select>
+            </div>
+            <div class="action-row">
+              <button id="saveAccountBtn" class="primary-btn" onclick="saveAccount()">Tạo tài khoản</button>
+              <button id="cancelAccountEditBtn" class="secondary-btn hidden" onclick="cancelAccountEdit()">Hủy sửa</button>
+            </div>
+            <p id="accountPasswordNote" class="muted-text">Mật khẩu mặc định sẽ là tên không dấu + @.</p>
+          </div>
+
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <h3>Danh sách tài khoản</h3>
+                <p class="muted-text">Admin sửa mọi tài khoản. Giáo viên chỉ sửa hoặc vô hiệu hóa học sinh.</p>
+              </div>
+              <input id="accountSearch" class="search-input" type="text" placeholder="Tìm tài khoản..." oninput="renderAccounts()">
+            </div>
+            <div id="accountList" class="list-wrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="classes" class="page">
+        <div class="two-column">
+          <div class="panel" id="classFormPanel">
+            <h3 id="classFormTitle">Tạo lớp học</h3>
+            <div class="form-group">
+              <label for="className">Tên lớp</label>
+              <input id="className" type="text" placeholder="Ví dụ: 10A1">
+            </div>
+            <div class="form-group">
+              <label for="classSubject">Môn học</label>
+              <input id="classSubject" type="text" placeholder="Ví dụ: Toán nâng cao">
+            </div>
+            <div class="form-group">
+              <label for="classDescription">Mô tả lớp</label>
+              <textarea id="classDescription" rows="4" placeholder="Mục tiêu, nội dung, ghi chú cho lớp học"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="classTeacher">Giáo viên phụ trách</label>
+              <select id="classTeacher"></select>
+            </div>
+            <div class="form-group">
+              <label>Thêm học sinh có sẵn vào lớp</label>
+              <div id="availableStudents" class="selection-box"></div>
+            </div>
+            <div class="action-row">
+              <button id="saveClassBtn" class="primary-btn" onclick="saveClass()">Tạo lớp</button>
+              <button id="cancelClassEditBtn" class="secondary-btn hidden" onclick="cancelClassEdit()">Hủy sửa</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <h3>Danh sách lớp học</h3>
+                <p class="muted-text">Mở lớp để xem đầy đủ thành viên, bài tập, chat nhóm và leaderboard trong lớp.</p>
+              </div>
+            </div>
+            <div id="classList" class="list-wrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="classDetail" class="page">
+        <button class="back-chip" onclick="navigate('classes')">← Quay lại danh sách lớp</button>
+        <div class="hero-panel compact">
+          <div>
+            <p class="section-label">Chi tiết lớp học</p>
+            <h3 id="classDetailTitle">Đang tải lớp học...</h3>
+            <p id="classDetailSubtitle">Thông tin lớp học, thành viên, bài tập, trò chuyện và xếp hạng.</p>
+          </div>
+          <div class="class-detail-stats">
+            <div class="mini-stat">
+              <span id="classStudentCount">0</span>
+              <small>Học sinh</small>
+            </div>
+            <div class="mini-stat">
+              <span id="classAssignmentCount">0</span>
+              <small>Bài tập</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <h3>Thành viên lớp</h3>
+              </div>
+              <button class="secondary-btn" onclick="exportClassStudents()">Xuất danh sách học sinh</button>
+            </div>
+            <div id="classMembers" class="list-wrap"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Leaderboard trong lớp</h3>
+            <div id="classLeaderboard" class="list-wrap"></div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="panel">
+            <h3>Bài tập của lớp</h3>
+            <div id="classAssignments" class="list-wrap"></div>
+          </div>
+
+          <div class="panel">
+            <div class="chat-head">
+              <div>
+                <h3>Chat nhóm lớp</h3>
+                <p class="muted-text">Trao đổi theo thời gian thực với thành viên trong lớp.</p>
+              </div>
+            </div>
+            <div id="classChatMessages" class="chat-box"></div>
+            <div class="chat-input-row">
+              <input id="classChatInput" type="text" placeholder="Nhập tin nhắn cho cả lớp...">
+              <button class="primary-btn" onclick="sendClassMessage()">Gửi</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="attendance" class="page">
+        <div class="two-column">
+          <div class="panel">
+            <h3>Điểm danh</h3>
+            <div class="form-group">
+              <label for="attendanceClass">Chọn lớp</label>
+              <select id="attendanceClass" onchange="renderAttendanceStudents()"></select>
+            </div>
+            <div class="form-group">
+              <label for="attendanceDate">Ngày</label>
+              <input id="attendanceDate" type="date">
+            </div>
+            <div id="attendanceStudents" class="selection-box"></div>
+            <button class="primary-btn" onclick="saveAttendance()">Lưu điểm danh</button>
+          </div>
+
+          <div class="panel">
+            <h3>Lịch sử điểm danh</h3>
+            <div id="attendanceHistory" class="list-wrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="assignments" class="page">
+        <div class="two-column">
+          <div class="panel" id="assignmentManagerPanel">
+            <h3 id="assignmentFormTitle">Giao bài tập</h3>
+            <div class="form-group">
+              <label for="assignmentClass">Chọn lớp</label>
+              <select id="assignmentClass"></select>
+            </div>
+            <div class="form-group">
+              <label for="assignmentTitle">Tiêu đề</label>
+              <input id="assignmentTitle" type="text" placeholder="Ví dụ: Bài tập chương 5">
+            </div>
+            <div class="form-group">
+              <label for="assignmentDescription">Mô tả</label>
+              <textarea id="assignmentDescription" rows="4" placeholder="Nhập nội dung bài tập"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="assignmentDueDate">Hạn nộp</label>
+              <input id="assignmentDueDate" type="date">
+            </div>
+            <div class="action-row">
+              <button id="saveAssignmentBtn" class="primary-btn" onclick="saveAssignment()">Giao bài</button>
+              <button id="cancelAssignmentEditBtn" class="secondary-btn hidden" onclick="cancelAssignmentEdit()">Hủy sửa</button>
+            </div>
+          </div>
+
+          <div class="panel" id="studentSubmissionPanel">
+            <h3>Nộp bài tập</h3>
+            <div class="form-group">
+              <label for="submissionAssignment">Chọn bài tập</label>
+              <select id="submissionAssignment"></select>
+            </div>
+            <div class="form-group">
+              <label for="submissionContent">Nội dung nộp bài</label>
+              <textarea id="submissionContent" rows="6" placeholder="Nhập bài làm, đường dẫn tài liệu, ghi chú..."></textarea>
+            </div>
+            <button class="primary-btn" onclick="submitAssignment()">Nộp bài</button>
+          </div>
+        </div>
+
+        <div class="panel assignment-full">
+          <h3>Danh sách bài tập</h3>
+          <div id="assignmentList" class="list-wrap"></div>
+        </div>
+
+        <div class="panel assignment-full">
+          <h3>Bài nộp</h3>
+          <div id="submissionList" class="list-wrap"></div>
+        </div>
+      </section>
+
+      <section id="chat" class="page">
+        <div class="chat-layout">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <h3>Chat cá nhân</h3>
+                <p class="muted-text">Nhắn tin trực tiếp giữa các tài khoản.</p>
+              </div>
+            </div>
+            <div id="directChatContacts" class="list-wrap"></div>
+          </div>
+
+          <div class="panel">
+            <div class="chat-head">
+              <div>
+                <h3 id="directChatTitle">Chưa chọn cuộc trò chuyện</h3>
+                <p class="muted-text" id="directChatSubtitle">Chọn một tài khoản để bắt đầu chat realtime.</p>
+              </div>
+            </div>
+            <div id="directChatMessages" class="chat-box"></div>
+            <div class="chat-input-row">
+              <input id="directChatInput" type="text" placeholder="Nhập tin nhắn cá nhân...">
+              <button class="primary-btn" onclick="sendDirectMessage()">Gửi</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <audio id="bgMusic" loop>
+    <source src="./nastelbom-lofi-chill-372954.mp3" type="audio/mpeg">
+  </audio>
+
+  <script src="app.js" charset="utf-8"></script>
+  <script type="module">
+    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getAuth,
+      signOut,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      GoogleAuthProvider,
+      linkWithPopup,
+      updatePassword
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      collection,
+      onSnapshot,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      serverTimestamp,
+      query,
+      where,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCEtJisxbrfVTn4YIVJQmTY_ckLPEYUH3Q",
+      authDomain: "spck-a3823.firebaseapp.com",
+      projectId: "spck-a3823",
+      storageBucket: "spck-a3823.firebasestorage.app",
+      messagingSenderId: "29616998416",
+      appId: "1:29616998416:web:92d22ed281ffc089892295"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const ADMIN_EMAILS = ["admin@learning-system.com"];
+    const googleProvider = new GoogleAuthProvider();
+
+    async function ensureUserProfile(user, fallbackRole = "teacher") {
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+
+      if (snap.exists()) {
+        const profile = snap.data();
+        if (profile.active === false) {
+          throw new Error("Tài khoản đã bị vô hiệu hóa.");
+        }
+        return profile;
+      }
+
+      const role = ADMIN_EMAILS.includes(user.email) ? "admin" : fallbackRole;
+      const profile = {
+        uid: user.uid,
+        name: user.displayName || user.email?.split("@")[0] || "Người dùng",
+        email: user.email || "",
+        role,
+        active: true,
+        xp: 0,
+        createdAt: serverTimestamp()
+      };
+
+      await setDoc(userRef, profile);
+      return profile;
+    }
+
+    async function createManagedAccount({ name, email, password, role }) {
+      const secondaryApp = initializeApp(firebaseConfig, `creator-${Date.now()}`);
+      const secondaryAuth = getAuth(secondaryApp);
+
+      try {
+        const credential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const user = credential.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          name,
+          email,
+          role,
+          active: true,
+          xp: 0,
+          createdAt: serverTimestamp()
+        });
+
+        return user;
+      } finally {
+        await signOut(secondaryAuth);
+        await deleteApp(secondaryApp);
+      }
+    }
+
+    window.firebaseApp = {
+      auth,
+      db,
+      doc,
+      setDoc,
+      getDoc,
+      collection,
+      onSnapshot,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      serverTimestamp,
+      query,
+      where,
+      orderBy,
+      linkWithPopup,
+      updatePassword,
+      googleProvider,
+      createManagedAccount,
+      ensureUserProfile
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      try {
+        const profile = await ensureUserProfile(user);
+        window.bootstrapApp(profile);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || "Không tải được dữ liệu người dùng.");
+        await signOut(auth);
+        window.location.href = "/login.html";
+      }
+    });
+
+    window.logout = async function () {
+      await signOut(auth);
+      window.location.href = "/login.html";
+    };
+  </script>
+</body>
+</html>

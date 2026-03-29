@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function activeUser() {
+      return signedIn() && userDoc().exists() && userDoc().data.active == true;
+    }
+
+    function isAdmin() {
+      return activeUser() && userDoc().data.role == "admin";
+    }
+
+    function isTeacher() {
+      return activeUser() && userDoc().data.role == "teacher";
+    }
+
+    function isStudent() {
+      return activeUser() && userDoc().data.role == "student";
+    }
+
+    function canManageTargetRole(role) {
+      return isAdmin() || (isTeacher() && role == "student");
+    }
+
+    match /users/{userId} {
+      allow read: if activeUser();
+
+      allow create: if signedIn()
+        && (
+          (request.auth.uid == userId && request.resource.data.active == true)
+          || canManageTargetRole(request.resource.data.role)
+        );
+
+      allow update: if isAdmin()
+        || (isTeacher()
+          && resource.data.role == "student"
+          && request.resource.data.role == "student"
+          && request.resource.data.email == resource.data.email)
+        || (request.auth.uid == userId
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.email == resource.data.email
+          && request.resource.data.active == resource.data.active);
+
+      allow delete: if false;
+    }
+
+    match /classes/{classId} {
+      allow read: if isAdmin() || request.auth.uid in resource.data.memberIds;
+
+      allow create: if isAdmin()
+        || (isTeacher() && request.resource.data.teacherId == request.auth.uid);
+
+      allow update, delete: if isAdmin()
+        || (isTeacher() && resource.data.teacherId == request.auth.uid);
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isAdmin()
+        || (isTeacher() && resource.data.teacherId == request.auth.uid)
+        || (isStudent() && request.auth.uid in resource.data.studentIds);
+
+      allow create, update, delete: if isAdmin()
+        || (isTeacher() && request.resource.data.teacherId == request.auth.uid);
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAdmin()
+        || (isTeacher() && resource.data.teacherId == request.auth.uid)
+        || (isStudent() && request.auth.uid in resource.data.studentIds);
+
+      allow create, update, delete: if isAdmin()
+        || (isTeacher() && request.resource.data.teacherId == request.auth.uid);
+    }
+
+    match /submissions/{submissionId} {
+      allow read: if isAdmin()
+        || (isTeacher() && resource.data.teacherId == request.auth.uid)
+        || (isStudent() && resource.data.studentId == request.auth.uid);
+
+      allow create: if isStudent() && request.resource.data.studentId == request.auth.uid;
+      allow update: if isAdmin() || (isStudent() && resource.data.studentId == request.auth.uid);
+      allow delete: if isAdmin() || (isStudent() && resource.data.studentId == request.auth.uid);
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAdmin()
+        || (resource.data.chatType == "direct" && request.auth.uid in resource.data.participantIds)
+        || (resource.data.chatType == "class" && request.auth.uid in resource.data.participantIds);
+
+      allow create: if activeUser()
+        && request.resource.data.senderId == request.auth.uid
+        && (
+          (request.resource.data.chatType == "direct" && request.auth.uid in request.resource.data.participantIds)
+          || (request.resource.data.chatType == "class" && request.auth.uid in request.resource.data.participantIds)
+        );
+
+      allow update, delete: if false;
+    }
+  }
+}
